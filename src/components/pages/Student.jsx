@@ -10,6 +10,7 @@ export default function Student({ sidebar, mainUser }) {
     const [payBox, setPaybox] = useState(false);
     const [option, setOption] = useState("transaction");
     const [students, setStudents] = useState([])
+    const [updateId, setUpdateId] = useState(0)
     const navigate = useNavigate()
     axios.defaults.withCredentials = true;
     useEffect(() => {
@@ -127,23 +128,24 @@ export default function Student({ sidebar, mainUser }) {
     function handleEditStudent(e) {
         console.log(e.target.getAttribute("name"))
         let id = e.target.getAttribute("name")
+        setUpdateId(id)
         axios.get(`http://localhost:3000/getstudent/${id}`).then((data) => {
-            console.log(data.data)
+            // console.log(data.data)
             let student = data.data
-            let { name, fatherName, mobile, file, address, course, date,courseFee } = student
-            let datas = { name, fatherName, mobile, file, address, course, date,courseFee }
-            setStudentForm(datas)
+            let { name, fatherName, mobile, address, course, date, courseFee } = student
+            let datas = { name, fatherName, mobile, address, course, date, courseFee }
+            setStudentForm({ ...datas, file: "" })
             let form = document.querySelector('#editStudentForm')
-            console.log(form)
+            // console.log(form)
             for (let key in student) {
                 let inputBox = document.querySelector(`#editStudentForm input[name=${key}]`)
                 if (inputBox) {
-                    console.log(document.querySelector(`#editStudentForm input[name=${key}]`))
+                    // console.log(document.querySelector(`#editStudentForm input[name=${key}]`))
                     inputBox.value = student[key]
                 }
             }
             let selectCourse = document.querySelector("#inputCourse")
-            console.log(selectCourse)
+            // console.log(selectCourse)
             for (let i = 0; i < selectCourse.options.length; i++) {
                 let optioned = selectCourse.options[i]
                 if (optioned.value == student.course) {
@@ -151,14 +153,36 @@ export default function Student({ sidebar, mainUser }) {
                     break
                 }
             }
-            console.log(studentForm)
+            // console.log(studentForm)
         })
     }
     function handleUpdateStudent(e) {
         e.preventDefault()
+        console.log(updateId)
         console.log(e.target)
         console.log(studentForm)
-        console.log(data)
+        // console.log(data)
+        const config = {
+            headers: {
+                'content-type': 'multipart/form-data'
+            }
+        };
+        axios.put(`http://localhost:3000/students/updatestudent/${updateId}`, studentForm, config).then((data) => {
+            console.log(data.data)
+            let modal1 = new bootstrap.Modal(document.getElementById('editStudent'));
+            let back = document.querySelectorAll(".modal-backdrop.show")
+            back.forEach((elem) => {
+                elem.classList.add("d-none")
+            })
+            modal1._hideModal()
+            Swal.fire({
+                title: "Good Job!",
+                icon: "success",
+                html: "Student Details Updated..",
+                timer:1000,
+            })
+        })
+
     }
     return (
         <>

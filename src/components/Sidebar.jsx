@@ -38,7 +38,7 @@ export default function Sidebar({ sidebar, setSidebar, mainUser }) {
                     <IconArrowBarToLeft />
                 </div> */}
                 <div className="side-user">
-                    <img src={profileImg} alt="" />
+                    <img src={`http://localhost:3000/images/${mainUser.file}`} alt="" />
                     <div>
                         <h4>{mainUser.name}</h4>
                         <h5>{mainUser.role}</h5>
