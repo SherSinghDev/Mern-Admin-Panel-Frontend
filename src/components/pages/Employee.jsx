@@ -5,9 +5,10 @@ import withReactContent from "sweetalert2-react-content"
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
-export default function Employee({ sidebar }) {
+export default function Employee({ sidebar, setMainUser }) {
   const mySwal = withReactContent(Swal)
   let [employees, setEmployees] = useState([])
+  let [updateId, setUpdateId] = useState(0)
   const navigate = useNavigate()
   let [employeeForm, setEmployeeForm] = useState({
     name: "",
@@ -27,6 +28,10 @@ export default function Employee({ sidebar }) {
       // console.log(data.data)
       if (!data.data.valid) {
         navigate("/login")
+      }
+      else {
+        let user = data.data.user
+        setMainUser({ ...user, role: user.role.toLowerCase() })
       }
     })
   }, [])
@@ -120,6 +125,117 @@ export default function Employee({ sidebar }) {
     })
 
   }
+
+
+  function handleEditEmployee(e) {
+    // console.log(e.target.getAttribute("name"))
+    let id = e.target.getAttribute("name")
+    setUpdateId(id)
+    axios.get(`http://localhost:3000/getemployee/${id}`).then((data) => {
+      // console.log(data.data)
+      let employee = data.data
+      console.log(employee)
+      let { name, mobile, fatherName, education, address, email, role, department } = employee
+      let datas = { name, mobile, fatherName, education, address, email, role, department }
+      setEmployeeForm({ ...datas, file: "" })
+      // console.log(datas)
+      // let form = document.querySelector('#editStudentForm')
+      // console.log(form)
+      for (let key in employee) {
+        let inputBox = document.querySelector(`#editEmployeeForm input[name=${key}]`)
+        if (inputBox) {
+          // console.log(document.querySelector(`#editStudentForm input[name=${key}]`))
+          inputBox.value = employee[key]
+        }
+      }
+
+      let selectRole = document.querySelector("#editRole")
+      for (let i = 0; i < selectRole.options.length; i++) {
+        let optioned = selectRole.options[i]
+        if (optioned.value == employee.role) {
+          selectRole.options[i].selected = true
+          break
+        }
+      }
+      let selectDepartment = document.querySelector("#editDepartment")
+      for (let i = 0; i < selectDepartment.options.length; i++) {
+        let optioned = selectDepartment.options[i]
+        if (optioned.value == employee.department) {
+          selectDepartment.options[i].selected = true
+          break
+        }
+      }
+    })
+  }
+  function handleUpdateEmployee(e) {
+    e.preventDefault()
+    console.log(updateId)
+    // console.log(e.target)
+    // console.log(studentForm)
+    // console.log(data)
+    const config = {
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    };
+    axios.put(`http://localhost:3000/employees/updateemployee/${updateId}`, employeeForm, config).then((data) => {
+      // console.log(data.data)
+      // let prevEmployees = employees.filter((employee)=>employee._id!=data.data._id)
+      // setEmployees([...prevEmployees,data.data])
+      let allemployees = employees.map((employee => {
+        if (employee._id == data.data._id) {
+          return data.data
+        }
+        else {
+          return employee
+        }
+      }))
+      setEmployees(allemployees)
+      let modal1 = new bootstrap.Modal(document.getElementById('editEmployee'));
+      let back = document.querySelectorAll(".modal-backdrop.show")
+      back.forEach((elem) => {
+        elem.classList.add("d-none")
+      })
+      modal1._hideModal()
+      Swal.fire({
+        title: "Good Job!",
+        icon: "success",
+        html: "Employee Details Updated..",
+        timer: 1000,
+      })
+    })
+    setEmployeeForm(employeeForm => {
+      return {
+        name: "",
+        mobile: "",
+        fatherName: "",
+        education: "",
+        address: "",
+        file: "",
+        email: "",
+        role: "",
+        department: "",
+        password: ""
+      }
+    })
+  }
+
+  function setToEmpty() {
+    setEmployeeForm(employeeForm => {
+      return {
+        name: "",
+        mobile: "",
+        fatherName: "",
+        education: "",
+        address: "",
+        file: "",
+        email: "",
+        role: "",
+        department: "",
+        password: ""
+      }
+    })
+  }
   return (
     <>
       <section className={sidebar ? "employee" : " employee section-full"}>
@@ -159,7 +275,7 @@ export default function Employee({ sidebar }) {
                     <td>{employee.mobile}</td>
                     <td>{employee.date}</td>
                     <td>{employee.address}</td>
-                    <td><i className="fa-solid fa-pen bg-success"></i><i className="fa-solid fa-indian-rupee-sign ms-2" onClick={() => setPaybox(true)} style={{ backgroundColor: "blue" }}></i><i className="fa-solid fa-trash bg-danger ms-2" name={employee._id} onClick={handleDelete}></i></td>
+                    <td><i className="fa-solid fa-pen bg-success" name={employee._id} data-bs-toggle="modal" data-bs-target="#editEmployee" onClick={handleEditEmployee}></i><i className="fa-solid fa-trash bg-danger ms-2" name={employee._id} onClick={handleDelete}></i></td>
                   </tr>
                 )
               })}
@@ -172,7 +288,7 @@ export default function Employee({ sidebar }) {
               <div className="modal-content">
                 <div className="modal-header d-flex justify-content-between">
                   <h1 className="modal-title fs-5" id="staticBackdropLabel">Employee Details</h1>
-                  <button data-bs-dismiss="modal" className="modal-close" aria-label="Close"><IconX /></button>
+                  <button data-bs-dismiss="modal" className="modal-close" aria-label="Close"><IconX onClick={setToEmpty} /></button>
                   {/* <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> */}
                 </div>
                 <div className="modal-body">
@@ -227,6 +343,89 @@ export default function Employee({ sidebar }) {
                         <div className="col-md-4">
                           <label htmlFor="inputCourses" className="form-label m-0">Department</label>
                           <select id="inputCourse" className="form-select" onChange={(e) => setEmployeeForm({ ...employeeForm, department: e.target.value })}>
+                            <option>Choose...</option>
+                            <option>HR</option>
+                            <option>Management</option>
+                            <option>Development</option>
+                          </select>
+                        </div>
+                        <div className="text-center pt-3">
+                          <button className="btn bg-primary text-light me-3 add_employee_btn" type="submit"> submit</button>
+                          <button className="btn bg-secondary text-light add_employee_btn modal-close" type="button" data-bs-dismiss="modal" aria-label="Close">Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+        {/* Edit Modal */}
+        <div className="modal fade modal-xl" id="editEmployee" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-content">
+                <div className="modal-header d-flex justify-content-between">
+                  <h1 className="modal-title fs-5" id="staticBackdropLabel">Employee Details</h1>
+                  <button data-bs-dismiss="modal" className="modal-close" aria-label="Close" onClick={setToEmpty}><IconX /></button>
+                  {/* <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> */}
+                </div>
+                <div className="modal-body">
+                  <form id="editEmployeeForm" onSubmit={handleUpdateEmployee}>
+                    <div className="container-fluid">
+                      <div className="row g-3">
+                        <div className="col-lg-4">
+                          <label htmlFor="">Name</label>
+                          <input type="text" className="form-control" placeholder="Enter Name" name="name" onChange={(e) => setEmployeeForm({ ...employeeForm, name: e.target.value })} />
+                        </div>
+                        <div className="col-lg-4">
+                          <label htmlFor="">Father's Name</label>
+                          <input type="text" className="form-control" placeholder="Enter Father's Name"
+                            name="fatherName" onChange={(e) => setEmployeeForm({ ...employeeForm, fatherName: e.target.value })} />
+                        </div>
+                        <div className="col-lg-4">
+                          <label htmlFor="">Mobile</label>
+                          <input type="number" className="form-control" placeholder="Enter Mobile No.1"
+                            name="mobile" onChange={(e) => setEmployeeForm({ ...employeeForm, mobile: e.target.value })} />
+                        </div>
+                        <div className="col-md-6">
+                          <label htmlFor="inputCity" className="form-label m-0">Picture Upload</label>
+                          <input type="file" name="image" accept="img,jpg,png,jpeg" onChange={(event) => setEmployeeForm({ ...employeeForm, file: event.target.files[0] })} className="form-control" />
+                        </div>
+                        <div className="col-lg-6">
+                          <label htmlFor="">Degree/Diploma</label>
+                          <input type="text" className="form-control m-0" name="education" placeholder="Degree" onChange={(e) => setEmployeeForm({ ...employeeForm, education: e.target.value })} />
+                        </div>
+
+                        <div className="col-lg-6">
+                          <label htmlFor="">Address</label>
+                          <input type="text" className="form-control" placeholder="Enter Address" name="address" onChange={(e) => setEmployeeForm({ ...employeeForm, address: e.target.value })} />
+                        </div>
+                        <div className="col-lg-6">
+                          <label htmlFor="">Email</label>
+                          <input type="Email" className="form-control" placeholder="Enter Email" name="email" onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })} />
+                        </div>
+                        <div className="col-lg-4">
+                          <label htmlFor="">Password</label>
+                          <input type="text" className="form-control" placeholder="Update Password" onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })} />
+                        </div>
+                        <div className="col-md-4">
+                          <label htmlFor="inputCourse" className="form-label m-0">Role</label>
+                          <select id="editRole" className="form-select" onChange={(e) => setEmployeeForm({ ...employeeForm, role: e.target.value })}>
+                            <option>Choose...</option>
+                            <option>Admin</option>
+                            <option>Manager</option>
+                            <option>HR</option>
+                            <option>TeleCaller</option>
+                          </select>
+                        </div>
+                        <div className="col-md-4">
+                          <label htmlFor="inputCourses" className="form-label m-0">Department</label>
+                          <select id="editDepartment" className="form-select" onChange={(e) => setEmployeeForm({ ...employeeForm, department: e.target.value })}>
                             <option>Choose...</option>
                             <option>HR</option>
                             <option>Management</option>

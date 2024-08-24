@@ -24,9 +24,9 @@ function App() {
       <Loader/>
       <Routes>
         <Route path='/' element={<Dashboard sidebar={sidebar} setMainUser={setMainUser}/>}/>
-        <Route path='/employees' element={<Employee sidebar={sidebar} mainUser={mainUser}/>}/>
-        <Route path='/students' element={<Student sidebar={sidebar} mainUser={mainUser}/>}/>
-        <Route path='/enquiry' element={<Enquiry sidebar={sidebar} mainUser={mainUser}/>}/>
+        <Route path='/employees' element={<Employee sidebar={sidebar} mainUser={mainUser} setMainUser={setMainUser}/>}/>
+        <Route path='/students' element={<Student sidebar={sidebar} mainUser={mainUser} setMainUser={setMainUser}/>}/>
+        <Route path='/enquiry' element={<Enquiry sidebar={sidebar} mainUser={mainUser} setMainUser={setMainUser}/>}/>
         <Route path='/login' element={<Login/>} setMainUser={setMainUser}/>
       </Routes>
       {/* <CreateParty sidebar={sidebar}/> */}

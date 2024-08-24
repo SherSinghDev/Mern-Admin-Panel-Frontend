@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { saveAs } from 'file-saver'
 
 
-export default function Enquiry({ sidebar, mainUser }) {
+export default function Enquiry({ sidebar, mainUser,setMainUser }) {
     const [payBox, setPaybox] = useState(false);
     const [option, setOption] = useState("transaction");
     const [enquiry, setEnquiry] = useState([])
@@ -17,6 +17,10 @@ export default function Enquiry({ sidebar, mainUser }) {
             // console.log(data.data)
             if (!data.data.valid) {
                 navigate("/login")
+            }
+            else {
+                let user = data.data.user
+                setMainUser({ ...user, role: user.role.toLowerCase() })
             }
         })
     }, [])
@@ -41,8 +45,8 @@ export default function Enquiry({ sidebar, mainUser }) {
 
                 axios.post("http://localhost:3000/enquiry/deleteenquiry", { id }).then((data) => {
                     // tr.classList.add("d-none")
-                    let arr = enquiry.filter((en)=>{
-                        return en._id!=id
+                    let arr = enquiry.filter((en) => {
+                        return en._id != id
                     })
                     setEnquiry(arr)
                 }).catch((err) => {

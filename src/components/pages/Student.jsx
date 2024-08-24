@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { saveAs } from 'file-saver'
 
 
-export default function Student({ sidebar, mainUser }) {
+export default function Student({ sidebar, mainUser, setMainUser }) {
     const [payBox, setPaybox] = useState(false);
     const [option, setOption] = useState("transaction");
     const [students, setStudents] = useState([])
@@ -18,6 +18,10 @@ export default function Student({ sidebar, mainUser }) {
             // console.log(data.data)
             if (!data.data.valid) {
                 navigate("/login")
+            }
+            else {
+                let user = data.data.user
+                setMainUser({ ...user, role: user.role.toLowerCase() })
             }
         })
     }, [])
@@ -126,7 +130,7 @@ export default function Student({ sidebar, mainUser }) {
 
     }
     function handleEditStudent(e) {
-        console.log(e.target.getAttribute("name"))
+        // console.log(e.target.getAttribute("name"))
         let id = e.target.getAttribute("name")
         setUpdateId(id)
         axios.get(`http://localhost:3000/getstudent/${id}`).then((data) => {
@@ -158,9 +162,9 @@ export default function Student({ sidebar, mainUser }) {
     }
     function handleUpdateStudent(e) {
         e.preventDefault()
-        console.log(updateId)
-        console.log(e.target)
-        console.log(studentForm)
+        // console.log(updateId)
+        // console.log(e.target)
+        // console.log(studentForm)
         // console.log(data)
         const config = {
             headers: {
@@ -168,7 +172,18 @@ export default function Student({ sidebar, mainUser }) {
             }
         };
         axios.put(`http://localhost:3000/students/updatestudent/${updateId}`, studentForm, config).then((data) => {
-            console.log(data.data)
+            // console.log(data.data)
+            // let prevStudents = students.filter((student)=>student._id!=data.data._id)
+            // setStudents([...prevStudents,data.data])
+            let allStudents = students.map((student => {
+                if (student._id == data.data._id) {
+                    return data.data
+                }
+                else {
+                    return student
+                }
+            }))
+            setStudents(allStudents)
             let modal1 = new bootstrap.Modal(document.getElementById('editStudent'));
             let back = document.querySelectorAll(".modal-backdrop.show")
             back.forEach((elem) => {
@@ -179,10 +194,38 @@ export default function Student({ sidebar, mainUser }) {
                 title: "Good Job!",
                 icon: "success",
                 html: "Student Details Updated..",
-                timer:1000,
+                timer: 1000,
             })
         })
+        setStudentForm(studentForm => {
+            return {
+                name: "",
+                mobile: "",
+                studentId: "",
+                fatherName: "",
+                address: "",
+                file: "",
+                course: "",
+                courseFee: "",
+                // date: ""
+            }
+        })
 
+    }
+    function setToEmpty() {
+        setStudentForm(studentForm => {
+            return {
+                name: "",
+                mobile: "",
+                studentId: "",
+                fatherName: "",
+                address: "",
+                file: "",
+                course: "",
+                courseFee: "",
+                // date: ""
+            }
+        })
     }
     return (
         <>
@@ -202,7 +245,7 @@ export default function Student({ sidebar, mainUser }) {
                             <div className="modal-content">
                                 <div className="modal-header d-flex justify-content-between">
                                     <h5 className="modal-title" id="exampleModalLabel">Add Student</h5>
-                                    <button data-bs-dismiss="modal" className="modal-close" aria-label="Close"><IconX /></button>
+                                    <button data-bs-dismiss="modal" className="modal-close" aria-label="Close" onClick={setToEmpty}><IconX /></button>
                                     {/* <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> */}
                                 </div>
                                 <div className="modal-body">
@@ -291,7 +334,6 @@ export default function Student({ sidebar, mainUser }) {
 
                 <div className={payBoxClass}>
                     <div className="payment-box-inner">
-
                         <div className="pay-head">
                             <h2 className="section-head"> <i className="fa-solid fa-arrow-left" onClick={() => setPaybox(false)}></i> Mark</h2>
                         </div>
@@ -408,7 +450,7 @@ export default function Student({ sidebar, mainUser }) {
                         <div className="modal-content">
                             <div className="modal-header d-flex justify-content-between">
                                 <h5 className="modal-title" id="exampleModalLabel">Edit Student</h5>
-                                <button data-bs-dismiss="modal" className="modal-close" aria-label="Close"><IconX /></button>
+                                <button data-bs-dismiss="modal" className="modal-close" aria-label="Close" onClick={setToEmpty}><IconX /></button>
                                 {/* <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> */}
                             </div>
                             <div className="modal-body">
